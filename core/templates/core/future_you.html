@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5 text-center">
+    <h2>Future You Chat</h2>
+    <form method="post" class="mb-3">
+        {% csrf_token %}
+        <div class="input-group">
+            <input type="text" name="user_message" class="form-control" placeholder="Say something to your future self...">
+            <button type="submit" class="btn btn-info">Send</button>
+        </div>
+    </form>
+    {% if ai_response %}
+        <div class="alert alert-info mt-3">{{ ai_response }}</div>
+    {% endif %}
+    <a href="{% url 'chatbot' %}" class="btn btn-primary mt-3">Back to Chatbot</a>
+</div>
+{% endblock %}

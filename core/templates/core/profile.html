@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Profile</h2>
+    <a href="{% url 'wellness_activity' %}" class="btn btn-info mb-3">Track Wellness Activity</a>
+    <h4>Your Wellness Tasks</h4>
+    <ul class="list-group">
+        {% for task in tasks %}
+            <li class="list-group-item">
+                {{ task.task }} | Date: {{ task.date }} | {% if task.completed %}Completed{% else %}Incomplete{% endif %}
+            </li>
+        {% empty %}
+            <li class="list-group-item">No tasks assigned.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

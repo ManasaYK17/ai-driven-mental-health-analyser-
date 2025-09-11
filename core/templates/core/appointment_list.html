@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Your Appointments</h2>
+    <ul class="list-group">
+        {% for appt in appointments %}
+            <li class="list-group-item">
+                Counselor: {{ appt.counselor.name }} | Date: {{ appt.date }} | Status: {{ appt.status }}
+            </li>
+        {% empty %}
+            <li class="list-group-item">No appointments found.</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'book_appointment' %}" class="btn btn-success mt-3">Book New Appointment</a>
+    <a href="{% url 'chatbot' %}" class="btn btn-primary mt-3">Back to Chatbot</a>
+</div>
+{% endblock %}

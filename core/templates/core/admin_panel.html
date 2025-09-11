@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Admin Panel</h2>
+    <a href="{% url 'add_counselor' %}" class="btn btn-primary m-2">Add Counselor</a>
+    <a href="{% url 'add_question' %}" class="btn btn-secondary m-2">Add Assessment Question</a>
+    <a href="{% url 'add_task' %}" class="btn btn-info m-2">Add Wellness Task</a>
+</div>
+{% endblock %}

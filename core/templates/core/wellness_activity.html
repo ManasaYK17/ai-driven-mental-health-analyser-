@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Today's Wellness Task</h2>
+    {% if todays_task %}
+        <div class="card p-3 mb-3">
+            <h5>{{ todays_task.task }}</h5>
+            <p>Date: {{ todays_task.date }}</p>
+            {% if not todays_task.completed %}
+                <a href="{% url 'mark_task_completed' todays_task.id %}" class="btn btn-success">Mark as Completed</a>
+            {% else %}
+                <span class="badge bg-success">Completed</span>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">No task assigned for today.</div>
+    {% endif %}
+    <a href="{% url 'profile' %}" class="btn btn-primary mt-3">Back to Profile</a>
+</div>
+{% endblock %}

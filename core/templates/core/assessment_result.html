@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5 text-center">
+    <h2>Assessment Result</h2>
+    <div class="mb-3">
+        <strong>PHQ-9 Score:</strong> {{ phq9_score }}<br>
+        <strong>GAD-7 Score:</strong> {{ gad7_score }}
+    </div>
+    {% if ai_response %}
+        <div class="alert alert-info">{{ ai_response }}</div>
+    {% endif %}
+    <a href="{% url 'chatbot' %}" class="btn btn-primary mt-3">Back to Chatbot</a>
+</div>
+{% endblock %}

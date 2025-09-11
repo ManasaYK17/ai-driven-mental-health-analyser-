@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5 text-center">
+    <h2>Mental Health Assessment</h2>
+    {% if question %}
+        <form method="post" class="mb-4">
+            {% csrf_token %}
+            <div class="mb-4">
+                <h4>Question {{ index }} of {{ total }}</h4>
+                <p>{{ question.text }}</p>
+                <div class="input-group w-75 mx-auto mb-2">
+                    <input type="text" name="ai_chat_message" class="form-control" placeholder="Type your answer (0-3) or ask AI about this question..." autofocus required>
+                    <button type="submit" class="btn btn-primary">Send</button>
+                </div>
+                <div class="form-text">Type 0, 1, 2, or 3 to answer. Or ask a question for AI help.</div>
+            </div>
+        </form>
+        {% if ai_chat_response %}
+            <div class="alert alert-info w-75 mx-auto">{{ ai_chat_response }}</div>
+        {% endif %}
+    {% else %}
+        <p>Assessment complete.</p>
+    {% endif %}
+</div>
+{% endblock %}

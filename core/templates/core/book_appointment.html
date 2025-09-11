@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Book Appointment</h2>
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% elif slot %}
+        <div class="alert alert-info mb-3">
+            <strong>Next Available Slot:</strong><br>
+            Counselor: {{ slot.counselor.name }}<br>
+            Date & Time: {{ slot.slot_time }}
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Book This Slot</button>
+        </form>
+    {% else %}
+        <div class="alert alert-warning">No available slots at this time.</div>
+    {% endif %}
+    <a href="{% url 'chatbot' %}" class="btn btn-primary mt-3">Back to Chatbot</a>
+</div>
+{% endblock %}

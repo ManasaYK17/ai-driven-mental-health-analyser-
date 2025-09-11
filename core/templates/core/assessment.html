@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>PHQ-9 & GAD-7 Assessment</h2>
+    <form method="post">
+        {% csrf_token %}
+        <h4>PHQ-9 Questions</h4>
+        {% for q in phq9 %}
+            <div class="mb-3">
+                <label>{{ q.text }}</label>
+                <select name="phq9_{{ q.id }}" class="form-select">
+                    <option value="0">0 - Not at all</option>
+                    <option value="1">1 - Several days</option>
+                    <option value="2">2 - More than half the days</option>
+                    <option value="3">3 - Nearly every day</option>
+                </select>
+            </div>
+        {% endfor %}
+        <h4>GAD-7 Questions</h4>
+        {% for q in gad7 %}
+            <div class="mb-3">
+                <label>{{ q.text }}</label>
+                <select name="gad7_{{ q.id }}" class="form-select">
+                    <option value="0">0 - Not at all</option>
+                    <option value="1">1 - Several days</option>
+                    <option value="2">2 - More than half the days</option>
+                    <option value="3">3 - Nearly every day</option>
+                </select>
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+{% endblock %}

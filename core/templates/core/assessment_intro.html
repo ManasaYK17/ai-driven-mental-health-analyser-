@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5 text-center">
+    <h2>Mental Health Assessment</h2>
+    <div class="alert alert-info w-75 mx-auto mb-4">
+        <strong>PHQ-9 &amp; GAD-7 Instructions</strong><br>
+        Over the last 2 weeks, how often have you been bothered by the following problems?<br>
+        <br>
+        <strong>Answers scored:</strong><br>
+        0 = Not at all<br>
+        1 = Several days<br>
+        2 = More than half the days<br>
+        3 = Nearly every day
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary btn-lg">Start Assessment</button>
+    </form>
+</div>
+{% endblock %}

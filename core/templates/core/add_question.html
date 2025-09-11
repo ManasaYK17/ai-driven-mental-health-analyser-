@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Add Assessment Question</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label>Question Text</label>
+            <input type="text" name="text" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Category</label>
+            <select name="category" class="form-select" required>
+                <option value="PHQ9">PHQ-9</option>
+                <option value="GAD7">GAD-7</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Add</button>
+    </form>
+    <a href="{% url 'admin_panel' %}" class="btn btn-secondary mt-3">Back to Admin Panel</a>
+</div>
+{% endblock %}

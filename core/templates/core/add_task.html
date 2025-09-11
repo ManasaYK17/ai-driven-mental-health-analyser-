@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Add Wellness Task</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label>Task</label>
+            <input type="text" name="task" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Assign To</label>
+            <select name="assigned_to" class="form-select" required>
+                {% for user in users %}
+                    <option value="{{ user.id }}">{{ user.username }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label>Date</label>
+            <input type="date" name="date" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Add</button>
+    </form>
+    <a href="{% url 'admin_panel' %}" class="btn btn-secondary mt-3">Back to Admin Panel</a>
+</div>
+{% endblock %}
