@@ -131,17 +131,17 @@ LOGIN_URL = '/login/'
 
 
 # Gemini API Key (set this in your environment or here for dev only)
-GEMINI_API_KEY = 'AIzaSyCF1V5En4lfR0A5BwUQtMJQ92gvQaQwOwY'
+GEMINI_API_KEY = ''
 
 # Twilio WhatsApp API credentials (set these in your environment for production)
-TWILIO_ACCOUNT_SID = 'Ni7CWvfxJCX7iQI8JSNy78xM2v5R5pdF' # Your Twilio Account SID
-TWILIO_AUTH_TOKEN = 'SKbf0318bc5458c730cb41f59b65b992d7'   # Your Twilio Auth Token
-TWILIO_WHATSAPP_FROM = '+13194353787'  # Your Twilio WhatsApp-enabled number (e.g. +14155238886)
+TWILIO_ACCOUNT_SID = '' # Your Twilio Account SID
+TWILIO_AUTH_TOKEN = ''   # Your Twilio Auth Token
+TWILIO_WHATSAPP_FROM = ''  # Your Twilio WhatsApp-enabled number (e.g. +14155238886)
 
 # Zoom API credentials (set these in your environment for production)
-ZOOM_API_KEY = 'QT9Jcb7tT_mgS1xoPZBybA'  # Your Zoom API Key
-ZOOM_API_SECRET = 'm2YJBUJox3Mmb9BArYWsPIABpsOsMQ7w'  # Your Zoom API Secret
-ZOOM_USER_ID = 'qQDCGVJGRP-Lu7ynNKnZGA'  # Your Zoom user ID (email or user id)
+ZOOM_API_KEY = ''  # Your Zoom API Key
+ZOOM_API_SECRET = ''  # Your Zoom API Secret
+ZOOM_USER_ID = ''  # Your Zoom user ID (email or user id)
 
 # Gemini API Key (set this in your environment or here for dev only)
-GEMINI_API_KEY ='AIzaSyCF1V5En4lfR0A5BwUQtMJQ92gvQaQwOwY'
+GEMINI_API_KEY =''
