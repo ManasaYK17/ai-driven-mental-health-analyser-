@@ -55,7 +55,10 @@
                     </div>
                 </div>
                 <div class="text-center mt-3">
-                    <a href="{% url 'chatbot' %}" class="btn btn-secondary">Back to Chatbot</a>
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" name="back_to_chatbot" value="1" class="btn btn-secondary">Back to Chatbot</button>
+                    </form>
                 </div>
             </div>
         </div>

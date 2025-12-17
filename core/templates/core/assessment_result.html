@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow-lg p-5" style="width: 800px; background-color: #f9f9f9; border-radius: 15px;">
 <div class="container mt-5 text-center">
     <h2>Assessment Result</h2>
     <div class="mb-3">
@@ -23,6 +25,8 @@
             </ul>
             <p><strong>Watch this helpful video:</strong></p>
             <iframe width="560" height="315" src="https://www.youtube.com/embed/sfSDQRdIvTc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            <p><strong>Relaxing Music Video:</strong></p>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/inpok4MKVLM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
         </div>
         <a href="{% url 'recommendations' %}" class="btn btn-success">View More Recommendations</a>
     {% elif risk_level == 'medium' %}

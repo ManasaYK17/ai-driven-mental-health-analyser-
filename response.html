@@ -8,7 +8,7 @@
             padding: 0;
             font-family: Arial, sans-serif;
             height: 100vh;
-            background: url("https://qubika.com/wp-content/uploads/2023/03/What-is-digital-health-technology.jpg.webp") no-repeat center center fixed;
+            background: url("https://qubika.com/wp-content/uploads/2023/03/What-is-digital-health-technology.jpg") no-repeat center center fixed;
             background-size: cover;
             display: flex;
             justify-content: center;
@@ -16,10 +16,10 @@
         }
         .login-box {
             background-color: rgba(0, 0, 0, 0.7);
-            padding: 50px;
-            border-radius: 20px;
+            padding: 40px;
+            border-radius: 15px;
             color: #fff;
-            width: 600px;
+            width: 400px;
         }
         input[type=text], input[type=password] {
             width: 100%;
@@ -48,7 +48,7 @@
     <div class="login-box">
         <h2>Login</h2>
         <form method="post">
-            {% csrf_token %}
+            <input type="hidden" name="csrfmiddlewaretoken" value="uHWjDPjinlJ5r8PS1cfafdoGmxmg6iqy3aqvnJwKMfAzfvTThZCyGbYUj0qMgmYx">
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>
             <button type="submit" class="btn">Login</button>

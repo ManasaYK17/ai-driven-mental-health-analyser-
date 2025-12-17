@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-success" role="alert">
+        <h4 class="alert-heading">Appointment Booked Successfully!</h4>
+        <p>Your counseling session has been scheduled. Here are the details:</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Appointment Details</h5>
+            <p class="card-text">
+                <strong>Counselor:</strong> {{ appointment.counselor.name }}<br>
+                <strong>Date & Time:</strong> {{ appointment.date }}<br>
+                <strong>Status:</strong> {{ appointment.status }}<br>
+                <strong>Location:</strong> {{ appointment.counselor.location }}<br>
+                <strong>Hospital:</strong> {{ appointment.counselor.hospital }}
+            </p>
+            {% if appointment.zoom_link %}
+                <div class="alert alert-info">
+                    <h6>Video Meeting Ready!</h6>
+                    <p>Your Zoom meeting link has been created. You can join the meeting at the scheduled time:</p>
+                    <a href="{{ appointment.zoom_link }}" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-video"></i> Join Zoom Meeting
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'appointment_list' %}" class="btn btn-secondary">View All Appointments</a>
+        <a href="{% url 'home' %}" class="btn btn-primary">Back to Home</a>
+    </div>
+</div>
+{% endblock %}

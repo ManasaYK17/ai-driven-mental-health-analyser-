@@ -4,7 +4,12 @@
     <h2>Profile - {{ user.username }}</h2>
     <p>Last Updated: {{ today }}</p>
     <a href="{% url 'wellness_activity' %}" class="btn btn-info mb-3">Track Wellness Activity</a>
+    <a href="{% url 'appointment_list' %}" class="btn btn-primary mb-3">View Appointments</a>
     <h4>Your Wellness Tasks</h4>
+    <form method="post" action="{% url 'reset_wellness' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger mb-3">Start Wellness Tasks Again</button>
+    </form>
     <ul class="list-group">
         {% for task in tasks %}
             <li class="list-group-item">

@@ -1,8 +1,61 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="container text-center mt-5">
-    <h1>AI-Driven Mental & Psychological System</h1>
-    <p>Welcome! Please log in as a user or admin to continue.</p>
-    <a href="{% url 'login' %}" class="btn btn-primary m-2">Login</a>
-</div>
-{% endblock %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Mental Support</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            background: url("https://qubika.com/wp-content/uploads/2023/03/What-is-digital-health-technology.jpg.webp") no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 110px;
+            border-radius: 20px;
+            text-align: center;
+            color: #fff;
+            width: 1100px;
+            max-width: 98%;
+        }
+        h2 {
+            font-size: 44px;
+            margin-bottom: 40px;
+        }
+        p {
+            font-size: 30px;
+            margin-bottom: 50px;
+        }
+        .btn {
+            background-color: #00bfff;
+            color: white;
+            padding: 22px 45px;
+            border: none;
+            border-radius: 10px;
+            margin: 10px 15px;
+            font-size: 30px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #0099cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome to AI Driven Mental and Psychological Support System</h2>
+        <p>Please log in to continue</p>
+        <form action="{% url 'login' %}" style="display:inline-block;">
+            <button class="btn">Log In</button>
+        </form>
+        <form action="{% url 'register' %}" style="display:inline-block;">
+            <button class="btn btn-success">Register</button>
+        </form>
+    </div>
+</body>
+</html>

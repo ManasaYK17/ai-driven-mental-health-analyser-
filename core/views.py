@@ -15,31 +15,66 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Q
 from .forms import AppointmentForm, WellnessTaskForm
-from .models import AssessmentQuestion, Appointment, Counselor, PeerSupport, WellnessTask, TemplateWellnessTask, AppointmentSlot, PeerChatSession, PeerChatMessage
+from .models import AssessmentQuestion, Appointment, Counselor, PeerSupport, WellnessTask, TemplateWellnessTask, AppointmentSlot, PeerChatSession, PeerChatMessage, PeerWaiting
 
 from django.contrib.auth.models import User
 from datetime import datetime, date
 from .gemini_utils import get_gemini_response
 from .twilio_utils import send_whatsapp_message
 from .zoom_utils import create_zoom_meeting
+from .twilio_video_utils import create_video_room, generate_access_token
+import logging
 
 def is_admin(user):
     return user.is_superuser
 
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import login
 
-@login_required
 def home(request):
-    return render(request, 'core/home.html')
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('home')
+    else:
+        form = AuthenticationForm()
+    return render(request, 'core/home.html', {'form': form})
 
 
 @login_required
 def chatbot(request):
+    if 'chat_history' not in request.session:
+        request.session['chat_history'] = []
+
     ai_response = None
     if request.method == 'POST':
         user_message = request.POST.get('user_message')
         if user_message:
-            ai_response = get_gemini_response(user_message, role='assistant')
+            # Append user message to chat history
+            chat_history = request.session['chat_history']
+            chat_history.append({'role': 'user', 'message': user_message})
+
+            # Build prompt with chat history for context
+            prompt = ""
+            for msg in chat_history:
+                if msg['role'] == 'user':
+                    prompt += f"User: {msg['message']}\n"
+                else:
+                    prompt += f"Assistant: {msg['message']}\n"
+
+            # Get AI response
+            ai_response = get_gemini_response(prompt, role='assistant')
+
+            # Append AI response to chat history
+            chat_history.append({'role': 'assistant', 'message': ai_response})
+            request.session['chat_history'] = chat_history
+
+    # Do not show chat history to user, only latest AI response
     return render(request, 'core/chatbot.html', {'ai_response': ai_response})
 
 
@@ -147,6 +182,9 @@ def assessment_result(request):
     else:
         risk_level = 'high'
 
+    # Store risk_level in session for use in booking
+    request.session['risk_level'] = risk_level
+
     # Clear scores from session after use
     del request.session['phq9_score']
     del request.session['gad7_score']
@@ -183,29 +221,18 @@ def peer_support(request):
     if existing_session:
         session = existing_session
     else:
-        # Try to find another user without an active session
-        other_users = User.objects.exclude(id=user.id).exclude(is_superuser=True)
-        available_user = None
-        for u in other_users:
-            if not PeerChatSession.objects.filter(
-                (Q(user1=u) | Q(user2=u)) & Q(active=True)
-            ).exists():
-                available_user = u
-                break
-
-        if available_user:
-            # Create a new session with the available user
-            session = PeerChatSession.objects.create(user1=user, user2=available_user)
+        # Check if there is a waiting user
+        waiting_user = PeerWaiting.objects.exclude(user=user).first()
+        if waiting_user:
+            # Pair with waiting user
+            session = PeerChatSession.objects.create(user1=user, user2=waiting_user.user)
+            # Remove waiting
+            waiting_user.delete()
         else:
-            # No available user, create a session for later pairing
-            # For now, create a dummy session or show waiting
-            # To make it work, I'll create a session with the user as both, but that's not ideal
-            # For demo, I'll pair with the first other user if exists
-            if other_users.exists():
-                session = PeerChatSession.objects.create(user1=user, user2=other_users.first())
-            else:
-                # No other users, show waiting
-                return render(request, 'core/peer_support.html', {'waiting': True})
+            # Add self to waiting
+            PeerWaiting.objects.get_or_create(user=user)
+            # No available user, show waiting
+            return render(request, 'core/peer_support.html', {'waiting': True})
 
     # Handle message sending
     if request.method == 'POST' and 'message' in request.POST:
@@ -214,6 +241,12 @@ def peer_support(request):
             PeerChatMessage.objects.create(session=session, sender=user, message=message_text)
             # Redirect to avoid duplicate form submission on refresh
             return redirect('peer_support')
+    elif request.method == 'POST' and 'clear_chat' in request.POST:
+        PeerChatMessage.objects.filter(session=session).delete()
+        return redirect('peer_support')
+    elif request.method == 'POST' and 'back_to_chatbot' in request.POST:
+        PeerChatMessage.objects.filter(session=session).delete()
+        return redirect('chatbot')
 
     # Get all messages for the session
     messages = PeerChatMessage.objects.filter(session=session).order_by('timestamp')
@@ -236,7 +269,21 @@ def future_you(request):
 
     conversation = request.session['future_you_conversation']
 
-    if request.method == 'POST':
+    if request.method == 'POST' and 'back_to_chatbot' in request.POST:
+        # Clear conversation history when user presses back to chatbot
+        if 'future_you_conversation' in request.session:
+            request.session['future_you_conversation'] = []
+        # Also clear chatbot history to start fresh
+        if 'chat_history' in request.session:
+            request.session['chat_history'] = []
+        # Clear future_you_conversation again to ensure no residual data
+        request.session['future_you_conversation'] = []
+        return redirect('chatbot')
+    elif request.method == 'POST' and 'clear_chat' in request.POST:
+        # Clear the future you conversation history
+        request.session['future_you_conversation'] = []
+        return redirect('future_you')
+    elif request.method == 'POST':
         user_message = request.POST.get('user_message')
         if user_message:
             # Add user message to conversation
@@ -261,6 +308,22 @@ def appointment_list(request):
     appointments = Appointment.objects.filter(user=request.user)
     return render(request, 'core/appointment_list.html', {'appointments': appointments})
 
+@login_required
+def cancel_appointment(request, appointment_id):
+    if request.method == 'POST':
+        try:
+            appointment = Appointment.objects.get(id=appointment_id, user=request.user)
+            # Free up the slot
+            slot = AppointmentSlot.objects.filter(counselor=appointment.counselor, slot_time=appointment.date).first()
+            if slot:
+                slot.is_booked = False
+                slot.save()
+            appointment.delete()
+            return HttpResponseRedirect(reverse('appointment_list'))
+        except Appointment.DoesNotExist:
+            return HttpResponseRedirect(reverse('appointment_list'))
+    else:
+        return HttpResponseRedirect(reverse('appointment_list'))
 
 @login_required
 def book_appointment(request):
@@ -291,17 +354,91 @@ def book_appointment(request):
                 start_time=slot.slot_time,
                 duration=30
             )
+            if zoom_err:
+                logging.error(f"Zoom meeting creation failed: {zoom_err}")
+                messages.error(request, "Failed to create Zoom meeting. Please contact support.")
+            else:
+                # Save zoom link to appointment
+                appointment.zoom_link = zoom_url
+                appointment.save()
+                logging.info(f"Zoom meeting created successfully: {zoom_url}")
             # Optionally, send Zoom link to both counselor and user (WhatsApp/email)
             if zoom_url:
+                logging.info(f"Sending Zoom link to counselor and user: {zoom_url}")
                 send_whatsapp_message(counselor.contact, f"Zoom meeting link: {zoom_url}")
                 if hasattr(user, 'profile') and getattr(user.profile, 'phone', None):
                     send_whatsapp_message(user.profile.phone, f"Your counseling session Zoom link: {zoom_url}")
-            return redirect('appointment_list')
+                else:
+                    messages.warning(request, "User phone number not found. Zoom link sent only to counselor.")
+            else:
+                messages.warning(request, "Zoom meeting link not available.")
+            # Render confirmation page with appointment and zoom link
+            zoom_link = zoom_url if zoom_url else None
+            return render(request, 'core/appointment_confirmation.html', {'appointment': appointment, 'zoom_link': zoom_link})
         except AppointmentSlot.DoesNotExist:
             return render(request, 'core/book_appointment.html', {'slots': [], 'error': 'Selected slot is no longer available.'})
 
-    # Get all available slots ordered by time
-    slots = AppointmentSlot.objects.filter(is_booked=False).order_by('slot_time')
+    # Get counselor_id from GET params if provided
+    counselor_id = request.GET.get('counselor_id')
+
+    # Check user risk level from session
+    risk_level = request.session.get('risk_level', 'low')
+
+    # If high risk and counselor_id provided, automatically book the first available slot
+    if risk_level == 'high' and counselor_id:
+        slots = AppointmentSlot.objects.filter(counselor_id=counselor_id, is_booked=False).order_by('slot_time')
+        if slots:
+            slot = slots[0]
+            # Mark slot as booked
+            slot.is_booked = True
+            slot.save()
+            # Create Appointment
+            appointment = Appointment.objects.create(
+                user=user,
+                counselor=slot.counselor,
+                date=slot.slot_time,
+                status='Confirmed'
+            )
+            # Send WhatsApp to counselor
+            counselor = slot.counselor
+            message = f"You have a new booking with {user.username} on {slot.slot_time.strftime('%Y-%m-%d %H:%M')}."
+            send_whatsapp_message(counselor.contact, message)
+            # Create Zoom meeting
+            zoom_url, zoom_err = create_zoom_meeting(
+                topic=f"Counseling Session: {user.username}",
+                start_time=slot.slot_time,
+                duration=30
+            )
+            if zoom_err:
+                logging.error(f"Zoom meeting creation failed: {zoom_err}")
+                messages.error(request, "Failed to create Zoom meeting. Please contact support.")
+            else:
+                # Save zoom link to appointment
+                appointment.zoom_link = zoom_url
+                appointment.save()
+                logging.info(f"Zoom meeting created successfully: {zoom_url}")
+            # Optionally, send Zoom link to both counselor and user (WhatsApp/email)
+            if zoom_url:
+                logging.info(f"Sending Zoom link to counselor and user: {zoom_url}")
+                send_whatsapp_message(counselor.contact, f"Zoom meeting link: {zoom_url}")
+                if hasattr(user, 'profile') and getattr(user.profile, 'phone', None):
+                    send_whatsapp_message(user.profile.phone, f"Your counseling session Zoom link: {zoom_url}")
+                else:
+                    messages.warning(request, "User phone number not found. Zoom link sent only to counselor.")
+            else:
+                messages.warning(request, "Zoom meeting link not available.")
+            # Render confirmation page with appointment and zoom link
+            zoom_link = zoom_url if zoom_url else None
+            return render(request, 'core/appointment_confirmation.html', {'appointment': appointment, 'zoom_link': zoom_link})
+        else:
+            return render(request, 'core/book_appointment.html', {'slots': [], 'error': 'No available slots for this counselor.'})
+
+    # Get available slots ordered by time, filter by counselor if provided
+    if counselor_id:
+        slots = AppointmentSlot.objects.filter(counselor_id=counselor_id, is_booked=False).order_by('slot_time')
+    else:
+        slots = AppointmentSlot.objects.filter(is_booked=False).order_by('slot_time')
+
     if not slots:
         return render(request, 'core/book_appointment.html', {'slots': [], 'error': 'No available slots at this time.'})
 
@@ -335,6 +472,15 @@ def wellness_activity(request):
     # Only show today's task
     todays_task = WellnessTask.objects.filter(assigned_to=user, date=today).first()
     return render(request, 'core/wellness_activity.html', {'todays_task': todays_task})
+
+@login_required
+def reset_wellness(request):
+    if request.method == 'POST':
+        user = request.user
+        WellnessTask.objects.filter(assigned_to=user).delete()
+        return redirect('profile')
+    else:
+        return redirect('profile')
 
 @login_required
 def mark_task_completed(request, task_id):
@@ -378,3 +524,28 @@ def add_task(request):
         return redirect('admin_panel')
     users = User.objects.filter(is_superuser=False)
     return render(request, 'core/add_task.html', {'users': users})
+
+@login_required
+def twilio_video_room(request, appointment_id):
+    """
+    View to create or join a Twilio Video Room for a given appointment.
+    """
+    try:
+        appointment = Appointment.objects.get(id=appointment_id, user=request.user)
+    except Appointment.DoesNotExist:
+        messages.error(request, "Appointment not found.")
+        return redirect('appointment_list')
+
+    room_name = f"appointment_{appointment.id}"
+    room_sid, error = create_video_room(room_name)
+    if error:
+        messages.error(request, f"Failed to create video room: {error}")
+        return redirect('appointment_list')
+
+    token = generate_access_token(identity=request.user.username, room_name=room_name)
+
+    return render(request, 'core/twilio_video_room.html', {
+        'token': token,
+        'room_name': room_name,
+        'appointment': appointment
+    })

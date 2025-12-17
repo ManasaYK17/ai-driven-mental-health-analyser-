@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Video Call Room: {{ room_name }}</h2>
+    <p>Appointment with {{ appointment.counselor.name }} on {{ appointment.date }}</p>
+
+    <div id="video-room"></div>
+
+    <button id="leave-room" class="btn btn-danger mt-3">Leave Room</button>
+</div>
+
+<script src="https://media.twiliocdn.com/sdk/js/video/releases/2.17.1/twilio-video.min.js"></script>
+<script>
+    const Video = Twilio.Video;
+    const token = "{{ token }}";
+    const roomName = "{{ room_name }}";
+
+    let room;
+
+    Video.connect(token, { name: roomName }).then(r => {
+        room = r;
+        const videoRoom = document.getElementById('video-room');
+
+        function attachParticipantTracks(participant) {
+            participant.tracks.forEach(publication => {
+                if (publication.isSubscribed) {
+                    const track = publication.track;
+                    videoRoom.appendChild(track.attach());
+                }
+            });
+
+            participant.on('trackSubscribed', track => {
+                videoRoom.appendChild(track.attach());
+            });
+        }
+
+        attachParticipantTracks(room.localParticipant);
+
+        room.participants.forEach(participant => {
+            attachParticipantTracks(participant);
+        });
+
+        room.on('participantConnected', participant => {
+            attachParticipantTracks(participant);
+        });
+
+        room.on('participantDisconnected', participant => {
+            participant.tracks.forEach(publication => {
+                if (publication.track) {
+                    publication.track.detach().forEach(element => element.remove());
+                }
+            });
+        });
+
+        document.getElementById('leave-room').onclick = () => {
+            room.disconnect();
+            window.location.href = "{% url 'appointment_list' %}";
+        };
+    }, error => {
+        console.error('Unable to connect to Room:', error.message);
+        alert('Could not connect to video room. Please try again later.');
+        window.location.href = "{% url 'appointment_list' %}";
+    });
+</script>
+{% endblock %}

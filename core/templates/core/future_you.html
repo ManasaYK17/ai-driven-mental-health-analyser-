@@ -1,25 +1,54 @@
 {% extends 'base.html' %}
 {% block content %}
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow-lg p-5" style="width: 800px; background-color: #f9f9f9; border-radius: 15px;">
 <div class="container mt-5 text-center">
     <h2>Future You Chat</h2>
-    <form method="post" class="mb-3">
+    <form method="post">
         {% csrf_token %}
-        <div class="input-group">
+        <div class="input-group mb-3">
             <input type="text" name="user_message" class="form-control" placeholder="Say something to your future self...">
             <button type="submit" class="btn btn-info">Send</button>
+            <button type="button" id="voiceBtn" class="btn btn-secondary" onclick="toggleSpeech()">🔊</button>
         </div>
+        {% if conversation %}
+            <div class="chat-history text-start border rounded p-3 mb-3" style="height: 300px; overflow-y: auto;">
+                {% for msg in conversation %}
+                    {% if msg.role == 'user' %}
+                        <div><strong>You:</strong> {{ msg.message }}</div>
+                    {% else %}
+                        <div><strong>Future You:</strong> {{ msg.message }}</div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+        <button type="submit" name="clear_chat" class="btn btn-warning me-2">Clear Chat</button>
+        <button type="submit" name="back_to_chatbot" class="btn btn-primary">Back to Chatbot</button>
     </form>
-    {% if conversation %}
-        <div class="chat-history text-start border rounded p-3 mb-3" style="height: 300px; overflow-y: auto;">
-            {% for msg in conversation %}
-                {% if msg.role == 'user' %}
-                    <div><strong>You:</strong> {{ msg.message }}</div>
-                {% else %}
-                    <div><strong>Future You:</strong> {{ msg.message }}</div>
-                {% endif %}
-            {% endfor %}
-        </div>
-    {% endif %}
-    <a href="{% url 'chatbot' %}" class="btn btn-primary mt-3">Back to Chatbot</a>
 </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+let utterance;
+let isSpeaking = false;
+
+function toggleSpeech() {
+    if (isSpeaking) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+        document.getElementById('voiceBtn').textContent = '🔊';
+    } else {
+        const text = document.querySelector('.chat-history').textContent.trim();
+        if (!text) return;
+        utterance = new SpeechSynthesisUtterance(text);
+        utterance.onend = () => {
+            isSpeaking = false;
+            document.getElementById('voiceBtn').textContent = '🔊';
+        };
+        window.speechSynthesis.speak(utterance);
+        isSpeaking = true;
+        document.getElementById('voiceBtn').textContent = '⏸️';
+    }
+}
+</script>
 {% endblock %}

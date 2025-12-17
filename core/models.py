@@ -44,6 +44,7 @@ class Appointment(models.Model):
     counselor = models.ForeignKey(Counselor, on_delete=models.CASCADE)
     date = models.DateTimeField()
     status = models.CharField(max_length=20, default='Pending')
+    zoom_link = models.URLField(blank=True, null=True)
 
 class PeerSupport(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='peer_user')
@@ -68,6 +69,13 @@ class PeerChatMessage(models.Model):
 
     def __str__(self):
         return f"{self.sender.username}: {self.message[:50]}"
+
+class PeerWaiting(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} waiting"
 
 class WellnessTask(models.Model):
     task = models.CharField(max_length=255)
